@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda de Citas</title>
+  <!-- Incluye Tailwind CSS desde un CDN (versión gratuita) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto p-4 max-w-md">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Agenda de Citas</h1>
+
+    <!-- Formulario de registro de citas -->
+    <form id="citaForm" class="bg-white p-6 rounded-lg shadow-lg">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Registrar Cita</h2>
+      <div class="space-y-4">
+        <input type="text" id="nombre" placeholder="Nombre" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="email" id="correo" placeholder="Correo" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="date" id="fecha" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="time" id="hora" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <textarea id="descripcion" placeholder="Descripción de la cita" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"></textarea>
+        <button type="submit" class="w-full p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Registrar Cita</button>
+      </div>
+    </form>
+
+    <!-- Lista de citas -->
+    <div id="listaCitas" class="mt-6"></div>
+  </div>
+
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, query, getDocs } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAU23bUdga30fpY7DGqo_ZLTuf8J5C7ckE",
+      authDomain: "citas-89b7f.firebaseapp.com",
+      projectId: "citas-89b7f",
+      storageBucket: "citas-89b7f.firebasestorage.app",
+      messagingSenderId: "696187694748",
+      appId: "1:696187694748:web:b904be90867bad86a70759"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Maneja el envío del formulario
+    document.getElementById('citaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById('nombre').value;
+      const correo = document.getElementById('correo').value;
+      const fecha = document.getElementById('fecha').value;
+      const hora = document.getElementById('hora').value;
+      const descripcion = document.getElementById('descripcion').value;
+
+      try {
+        // Guarda los datos en Firestore
+        await addDoc(collection(db, 'citas'), {
+          nombre: nombre,
+          correo: correo,
+          fecha: fecha,
+          hora: hora,
+          descripcion: descripcion,
+          timestamp: serverTimestamp()
+        });
+
+        alert('Cita registrada con éxito');
+        document.getElementById('citaForm').reset();
+      } catch (e) {
+        console.error('Error: ', e);
+        alert('Error al registrar la cita');
+      }
+    });
+
+    // Muestra las citas registradas
+    async function mostrarCitas() {
+      const listaCitas = document.getElementById('listaCitas');
+      listaCitas.innerHTML = '<h3 class="text-xl font-bold mb-4 text-gray-800">Citas Registradas</h3>';
+
+      const q = query(collection(db, 'citas'));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach((doc) => {
+        const cita = doc.data();
+        listaCitas.innerHTML += `
+          <div class="p-4 border rounded-lg shadow-md mb-4 bg-white">
+            <p class="text-lg font-semibold text-gray-800">${cita.nombre} - ${cita.fecha} a las ${cita.hora}</p>
+            <p class="text-gray-600">Descripción: ${cita.descripcion}</p>
+            <p class="text-gray-500">Registrado: ${cita.timestamp ? cita.timestamp.toDate().toLocaleString() : 'Sin timestamp'}</p>
+          </div>
+        `;
+      });
+    }
+
+    // Llama a la función cuando la página cargue
+    window.onload = mostrarCitas;
+  </script>
+</body>
+</html>
